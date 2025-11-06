@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles/query.css">
+</head>
+<body>
+    <div class="query-container">
+        <h2>Search Music 🎶</h2>
+        <form action="/query" method="post" id="queryForm">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Song title">
+            </div>
+            <div class="form-group">
+                <label for="artist">Artist:</label>
+                <input type="text" class="form-control" id="artist" name="artist" placeholder="Artist name">
+            </div>
+            <div class="form-group">
+                <label for="year">Year:</label>
+                <input type="text" class="form-control" id="year" name="year" placeholder="Release year">
+            </div>
+            <button type="submit" class="btn btn-primary">Query</button>
+        </form>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="scripts/query.js"></script>
+</body>
+</html>

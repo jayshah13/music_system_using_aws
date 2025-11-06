@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Main Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <h2>Welcome, {{ username }}!</h2>
+
+            <div>
+                <h3>Your Subscriptions</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Year</th>
+                            <th>Image</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in subscriptions %}
+                            <tr>
+                                <td>{{ subscription.title }}</td>
+                                <td>{{ subscription.artist }}</td>
+                                <td>{{ subscription.year }}</td>
+                                <td>
+                                    <img src="{{ subscription.image_url }}" alt="{{ subscription.artist }}" width="100">
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('unsubscribe') }}" method="post">
+                                        <input type="hidden" name="title" value="{{ subscription.title }}">
+                                        <input type="hidden" name="artist" value="{{ subscription.artist }}">
+                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <h3>Query Results</h3>
+                {% if query_results %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Year</th>
+                                <th>Image</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in query_results %}
+                                <tr>
+                                    <td>{{ result.title }}</td>
+                                    <td>{{ result.artist }}</td>
+                                    <td>{{ result.year }}</td>
+                                    <td>
+                                        <img src="{{ result.image_url }}" alt="{{ result.artist }}" width="100">
+                                    </td>
+                                    <td>
+                                        <form action="/subscribe" method="post">
+                                            <input type="hidden" name="title" value="{{ result.title }}">
+                                            <input type="hidden" name="artist" value="{{ result.artist }}">
+                                            <button type="submit" class="btn btn-primary">Subscribe</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No results found.</p>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="/query" class="btn btn-primary">Query</a>
+                <a href="/logout" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

@@ -28,11 +28,6 @@ The application allows users to:
   - Users can search for songs by title, artist, and year.
   - Displays query results with song information and artist images.
 
-- **Subscription Management:**
-  - Users can subscribe to songs from the query results.
-  - Subscribed songs are displayed in the user's subscription area.
-  - Users can remove subscriptions.
-
 - **AWS Integration:**
   - Uses DynamoDB for data storage.
   - Stores artist images in S3 and generates presigned URLs.
@@ -153,25 +148,27 @@ The application allows users to:
 
     ```apache
     <VirtualHost *:80>
-        ServerName your-ec2-public-dns
+    ServerName ec2-3-226-76-29.compute-1.amazonaws.com
 
-        WSGIDaemonProcess your-app threads=5
-        WSGIScriptAlias / /path/to/your/app/wsgi.py
+    WSGIDaemonProcess aws-music python-home=/home/ubuntu/AWS_MUSIC_SYSTEM/venv python-path=/home/ubuntu/AWS_MUSIC_SYSTEM threads=5
+    WSGIProcessGroup aws-music
+    WSGIScriptAlias / /home/ubuntu/AWS_MUSIC_SYSTEM/app.wsgi
 
-        <Directory /path/to/your/app>
-            WSGIProcessGroup your-app
-            WSGIApplicationGroup %{GLOBAL}
-            Require all granted
-        </Directory>
+    <Directory /home/ubuntu/AWS_MUSIC_SYSTEM>
+        Require all granted
+        Options FollowSymLinks
+        AllowOverride All
+    </Directory>
 
-        Alias /static /path/to/your/app/static
-        <Directory /path/to/your/app/static>
-            Require all granted
-        </Directory>
+    Alias /static /home/ubuntu/AWS_MUSIC_SYSTEM/static
+    <Directory /home/ubuntu/AWS_MUSIC_SYSTEM/static>
+        Require all granted
+        Options FollowSymLinks
+    </Directory>
 
-        ErrorLog ${APACHE_LOG_DIR}/your-app-error.log
-        CustomLog ${APACHE_LOG_DIR}/your-app-access.log combined
-    </VirtualHost>
+    ErrorLog ${APACHE_LOG_DIR}/aws-music-error.log
+    CustomLog ${APACHE_LOG_DIR}/aws-music-access.log combined
+</VirtualHost>
     ```
 
   - Enable the site and restart Apache2:
@@ -217,135 +214,17 @@ The application allows users to:
 
 ---
 
-## Code Explanation
-
-### Task 1: DynamoDB Setup
-
-- **`task1.py`**
-
-  - **Purpose:** Automates the creation of DynamoDB tables (`login`, `music`, `subscription`) and loads initial data.
-  - **Login Table:**
-    - Contains 10 predefined user accounts.
-    - Attributes: `email`, `user_name`, `password`.
-  - **Music Table:**
-    - Stores music records from `a1.json`.
-    - Attributes: `title`, `artist`, `year`, `web_url`, `image_url`.
-  - **Subscription Table:**
-    - Tracks user subscriptions.
-    - Attributes: `email`, `title`, `artist`.
-
-- **Key Functions:**
-
-  - **Creating Tables:**
-    - Uses `dynamodb.create_table()` with appropriate `KeySchema` and `AttributeDefinitions`.
-    - Waits for table creation using `table.meta.client.get_waiter('table_exists').wait()`.
-
-  - **Loading Data:**
-    - Reads data from `a1.json`.
-    - Uses `batch_writer()` to efficiently write multiple items.
-
-### Task 2: S3 Setup
-
-- **`task2.py`**
-
-  - **Purpose:** Downloads artist images and uploads them to an S3 bucket.
-  - **S3 Bucket:**
-    - Bucket name: `music-app-images`.
-    - Stores images with filenames as `<ArtistName>.jpg`.
-
-- **Key Functions:**
-
-  - **Downloading Images:**
-    - Parses `image_url` from each song in `a1.json`.
-    - Uses `requests.get()` to download image data.
-
-  - **Uploading to S3:**
-    - Uses `s3.put_object()` to upload images to the S3 bucket.
-
-### Task 3: Login Page
-
-- **`login.py`**
-
-  - **Purpose:** Handles user authentication.
-  - **Route:** `/login`
-  - **Methods:** `GET`, `POST`
-
-- **Functionality:**
-
-  - **Login Form:**
-    - Collects `email` and `password`.
-  - **Authentication:**
-    - Retrieves user data from the `login` table.
-    - Checks if the provided password matches.
-    - Stores user session data on successful login.
-    - Displays error message on failure.
-
-- **Template:** `login.html`
-
-  - Styled with Bootstrap.
-  - Includes form fields for email and password.
-  - Displays flash messages for feedback.
-
-### Task 4: Register Page
-
-- **`register.py`**
-
-  - **Purpose:** Manages user registration via API Gateway and Lambda function.
-  - **Route:** `/register`
-  - **Methods:** `GET`, `POST`
-
-- **Functionality:**
-
-  - **Registration Form:**
-    - Collects `email`, `username`, and `password`.
-  - **Email Validation:**
-    - Checks if the email already exists in the `login` table.
-    - Displays error message if the email is taken.
-  - **API Integration:**
-    - Sends a POST request to the API Gateway endpoint to invoke the Lambda function for user registration.
-  - **Success Handling:**
-    - Redirects to the login page with a success message.
-
-- **Template:** `register.html`
-
-  - Styled with Bootstrap.
-  - Includes form fields for email, username, and password.
-  - Displays flash messages for feedback.
-
-### Task 5: Main Page
-
-The `main.py` file is central to the application's functionality, handling user interactions after login, including querying songs, managing subscriptions, and displaying user information. There are three versions of `main.py` provided:
-
-1. **`main_without_images.py`**
-2. **`main.py`**
-3. **`main2.py`**
-
-Each version builds upon the previous one, adding more features and integrating additional AWS services.
-
----
-
 #### Common Functionality Across All Versions
 
 - **User Session Management:**
   - Ensures the user is logged in before accessing main features.
   - Redirects unauthenticated users to the login page.
 
-- **Subscription Area:**
-  - Retrieves user subscriptions from the `subscription` table in DynamoDB.
-  - Displays subscriptions with song details.
-  - Allows users to remove subscriptions via the `/unsubscribe` route.
-
 - **Query Area:**
   - Allows users to search for songs by title, artist, and year.
   - Builds a filter expression based on provided criteria.
   - Retrieves matching songs from the `music` table in DynamoDB.
   - Displays query results with an option to subscribe.
-
-- **Subscription Management:**
-  - **Subscribe:**
-    - Adds a new subscription to the `subscription` table.
-  - **Unsubscribe:**
-    - Removes the subscription from the `subscription` table.
 
 - **Logout:**
   - Clears the user session and redirects to the login page.
@@ -369,32 +248,6 @@ Each version builds upon the previous one, adding more features and integrating 
     - No use of AWS API Gateway or Lambda functions.
   - **Simplified Imports:**
     - Does not import the `requests` library since there's no need to make HTTP requests to external APIs.
-
-- **Code Highlights:**
-
-  - **Imports:**
-
-    ```python
-    import boto3
-    ```
-
-  - **Subscription Management:**
-
-    ```python
-    @app.route('/subscribe', methods=['POST'])
-    def subscribe():
-        # Directly adds the subscription to DynamoDB
-    ```
-
-    ```python
-    @app.route('/unsubscribe', methods=['POST'])
-    def unsubscribe():
-        # Directly removes the subscription from DynamoDB
-    ```
-
-- **Use Case:**
-  - Suitable for environments where AWS Lambda and API Gateway are not utilized.
-  - Focuses on core functionality without additional AWS services.
 
 ---
 
@@ -458,21 +311,6 @@ Each version builds upon the previous one, adding more features and integrating 
         )
         result['image_url'] = image_url
     ```
-
-  - **Subscription Management:**
-
-    ```python
-    @app.route('/subscribe', methods=['POST'])
-    def subscribe():
-        # Directly adds the subscription to DynamoDB
-    ```
-
-    ```python
-    @app.route('/unsubscribe', methods=['POST'])
-    def unsubscribe():
-        # Directly removes the subscription from DynamoDB
-    ```
-
 - **Use Case:**
   - Ideal when you want to include artist images to enhance user experience.
   - Does not require the setup of AWS API Gateway and Lambda functions for subscription management.
@@ -517,58 +355,7 @@ Each version builds upon the previous one, adding more features and integrating 
     s3 = boto3.client('s3')
     bucket_name = 'music-app-images'
     ```
-
-  - **Subscription Management via API:**
-
-    - **Subscribe:**
-
-      ```python
-      @app.route('/subscribe', methods=['POST'])
-      def subscribe():
-          email = session['email']
-          title = request.form['title']
-          artist = request.form['artist']
-          
-          subscription_data = {
-              'email': email,
-              'title': title,
-              'artist': artist
-          }
-          
-          response = requests.post(f'{API_BASE_URL}/subscriptions', json=subscription_data)
-          
-          if response.status_code == 201:
-              flash('Subscription added successfully!', 'success')
-          else:
-              flash('Failed to add subscription. Please try again.', 'error')
-          
-          return redirect(url_for('main'))
-      ```
-
-    - **Unsubscribe:**
-
-      ```python
-      @app.route('/unsubscribe', methods=['POST'])
-      def unsubscribe():
-          email = session['email']
-          title = request.form['title']
-          
-          response = requests.delete(f'{API_BASE_URL}/unsubscribe', params={
-              'email': email,
-              'title': title
-          })
-          
-          if response.status_code == 200:
-              flash('Subscription removed successfully!', 'info')
-          else:
-              flash('Failed to remove subscription. Please try again.', 'error')
-          
-          return redirect(url_for('main'))
-      ```
-
-    - **Commented Out Code:**
-      - Shows previous direct interactions with DynamoDB, serving as a reference.
-
+    
   - **S3 Image Retrieval:**
     - Same as in `main.py`.
 
@@ -576,18 +363,6 @@ Each version builds upon the previous one, adding more features and integrating 
   - Suitable for applications that aim to follow a microservices architecture.
   - Enhances scalability and maintainability by decoupling the frontend from direct database interactions.
   - Ideal for implementing advanced AWS services like API Gateway and Lambda.
-
----
-
-#### Summary of main.py main_without_images.py and main2.py Differences
-
-| Feature                            | `main_without_images.py` | `main.py`                | `main2.py`                       |
-|------------------------------------|--------------------------|--------------------------|----------------------------------|
-| S3 Image Retrieval                 | No                       | Yes                      | Yes                              |
-| Subscription Management            | Direct DynamoDB          | Direct DynamoDB          | Via API Gateway & Lambda         |
-| API Gateway and Lambda Integration | No                       | No                       | Yes                              |
-| Imports `requests` Library         | No                       | Yes (unused)             | Yes (used for API calls)         |
-| Commented Out Code                 | No                       | No                       | Yes (shows previous implementation) |
 
 ---
 
@@ -603,131 +378,3 @@ Each version builds upon the previous one, adding more features and integrating 
   - Submits the form to the `/query` route for processing.
 
 ---
-
-#### Choosing the Appropriate Version
-
-- **Use `main_without_images.py` if:**
-  - You want a simple application without the need for artist images.
-  - You prefer direct interaction with DynamoDB for subscription management.
-  - You are not integrating AWS API Gateway and Lambda functions.
-
-- **Use `main.py` if:**
-  - You want to enhance the user experience by displaying artist images.
-  - You are comfortable with direct DynamoDB interactions for subscription management.
-  - You do not require API Gateway and Lambda integration.
-
-- **Use `main2.py` if:**
-  - You aim to implement a microservices architecture with AWS services.
-  - You want to decouple the application logic by using API Gateway and Lambda functions.
-  - You desire both S3 image retrieval and advanced AWS integrations.
-
----
-
-#### Summarized main.py permutations explanation
-
-Each version of `main.py` builds upon the previous one, progressively adding more AWS services and functionalities:
-
-1. **`main_without_images.py`** provides the core functionalities without image retrieval or advanced AWS services.
-2. **`main.py`** adds S3 integration to retrieve and display artist images, enhancing the user interface.
-3. **`main2.py`** integrates API Gateway and Lambda functions for subscription management, following best practices for scalable and maintainable cloud applications.
-
-- **Functionality:**
-
-  - **User Session Validation:**
-    - Ensures the user is logged in before accessing main features.
-
-  - **Subscription Area:**
-    - Retrieves user subscriptions from the `subscription` table.
-    - Generates presigned URLs for artist images stored in S3.
-    - Displays subscriptions with song details and images.
-    - Allows users to remove subscriptions via the `/unsubscribe` route.
-
-  - **Query Area:**
-    - Allows users to search for songs by title, artist, and year.
-    - Builds a filter expression based on provided criteria.
-    - Retrieves matching songs from the `music` table.
-    - Generates presigned URLs for artist images.
-    - Displays query results with an option to subscribe.
-
-  - **Subscription Management:**
-    - **Subscribe:**
-      - Invokes the API Gateway endpoint to trigger the `Lambda_Subscribe` function.
-      - Adds a new subscription to the `subscription` table.
-    - **Unsubscribe:**
-      - Invokes the API Gateway endpoint to trigger the `Lambda_Subscribe` function.
-      - Removes the subscription from the `subscription` table.
-
-  - **Logout:**
-    - Clears the user session and redirects to the login page.
-
-- **Templates:**
-  - **`main.html`**
-    - Displays user subscriptions and query results.
-    - Includes forms to subscribe or unsubscribe from songs.
-  - **`query.html`**
-    - Provides a form to input query criteria.
-
-### Task 6: API Gateway and Lambda Functions
-
-- **Purpose:** Enables communication between the application and DynamoDB through RESTful APIs.
-
-- **API Gateway:**
-
-  - **Endpoints:**
-    - `/register` (POST): Triggers the `Lambda_Register` function.
-    - `/subscriptions` (POST/DELETE): Triggers the `Lambda_Subscribe` function.
-
-- **Lambda Functions:**
-
-  - **`Lambda_Register`:**
-    - Handles user registration.
-    - Adds new user data to the `login` table.
-
-  - **`Lambda_Subscribe`:**
-    - Manages user subscriptions.
-    - Adds or removes entries in the `subscription` table based on the HTTP method.
-
-- **Integration with the Application:**
-
-  - **`main.py` and `register.py`**
-    - Use the `requests` library to make HTTP requests to the API endpoints.
-    - Handle responses and provide user feedback accordingly.
-
----
-
-## Security Considerations
-
-- **Secure Access to S3:**
-  - Uses presigned URLs to grant temporary access to artist images in S3.
-  - Ensures images are not publicly accessible without authorization.
-
-- **User Session Management:**
-  - Implements session management to protect user data.
-  - Uses Flask's `session` and `secret_key` for secure sessions.
-
-- **Input Validation:**
-  - Validates user inputs on registration and login.
-  - Sanitizes query parameters to prevent injection attacks.
-
-- **AWS IAM Roles:**
-  - Attaches necessary permissions to the EC2 instance role.
-  - Follows the principle of least privilege.
-
----
-
-## Acknowledgements
-
-- **Data Source:**
-  - Music data and images are sourced from the provided `a1.json` file.
-
-- **Libraries and Frameworks:**
-  - **Flask:** For building the web application.
-  - **Bootstrap:** For responsive and modern UI design.
-  - **Boto3:** For interacting with AWS services.
-
-- **Guidelines:**
-  - Project developed following the assessment specifications provided.
-
----
-
-**Note:** This application is developed for educational purposes. Ensure you follow AWS best practices and consider cost implications when deploying AWS resources.

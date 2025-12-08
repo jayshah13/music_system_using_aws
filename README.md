@@ -2,25 +2,6 @@
 
 Welcome to the AWS Web-Hosted Cloud Music Subscription Application! This project is a cloud-based web application that allows users to register, log in, query a music database, subscribe to songs, and manage their subscriptions. The application leverages various AWS services such as EC2, S3, DynamoDB, API Gateway, and Lambda functions.
 
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [AWS Services Used](#aws-services-used)
-- [Prerequisites](#prerequisites)
-- [Installation and Setup](#installation-and-setup)
-- [Usage](#usage)
-- [Code Explanation](#code-explanation)
-  - [Task 1: DynamoDB Setup](#task-1-dynamodb-setup)
-  - [Task 2: S3 Setup](#task-2-s3-setup)
-  - [Task 3: Login Page](#task-3-login-page)
-  - [Task 4: Register Page](#task-4-register-page)
-  - [Task 5: Main Page](#task-5-main-page)
-  - [Task 6: API Gateway and Lambda Functions](#task-6-api-gateway-and-lambda-functions)
-- [Security Considerations](#security-considerations)
-- [Acknowledgements](#acknowledgements)
-
 ---
 
 ## Project Overview
@@ -60,38 +41,6 @@ The application allows users to:
 - **Responsive Web Design:**
   - User-friendly interfaces built with HTML and Bootstrap.
   - Consistent styling and animations for better user experience.
-
----
-
-## Architecture
-
-![detailed_aws_architecture_diagram_2](https://github.com/user-attachments/assets/3845ddf8-17c8-41d0-a880-b8dea252ac5a)
-
-
-The application architecture consists of:
-
-- **AWS EC2 Instance:**
-  - Hosts the Flask web application.
-  - Serves HTML templates and handles user requests.
-
-- **Flask Application Components:**
-  - `login.py`: Handles user authentication.
-  - `register.py`: Manages user registration via API Gateway.
-  - `main.py`: Contains the main application logic.
-  - HTML Templates: `login.html`, `register.html`, `main.html`, `query.html`.
-
-- **AWS DynamoDB:**
-  - `login` table: Stores user credentials.
-  - `music` table: Contains music data.
-  - `subscription` table: Tracks user subscriptions.
-
-- **AWS S3 Bucket:**
-  - Stores artist images.
-  - Images are accessed via presigned URLs for security.
-
-- **AWS API Gateway and Lambda Functions:**
-  - API Gateway exposes REST API endpoints.
-  - Lambda functions handle user registration and subscription management.
 
 ---
 
